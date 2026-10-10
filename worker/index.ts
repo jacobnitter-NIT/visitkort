@@ -541,10 +541,20 @@ async function api(req: Request, e: Env) {
         max_tokens: 900,
         temperature: 0,
       });
-    } catch {
+    } catch (error) {
+      // Log only the provider error, never the image, prompt or contact details.
+      const reference = crypto.randomUUID();
+      const message = error instanceof Error ? error.message : "Unknown AI error";
+      console.error("visitkort.ai.scan_failed", {
+        reference,
+        model: "@cf/meta/llama-3.2-11b-vision-instruct",
+        message: message.slice(0, 600),
+      });
       fail(
         502,
-        "AI-scanning kunne ikke gennemføres. Kontrollér AI-binding og modellicens i Cloudflare. Billedet er bevaret, så du kan udfylde manuelt.",
+        "Cloudflare AI kunne ikke gennemføre scanningen. Fejlreference: " +
+          reference +
+          ". Billedet er bevaret. Den konkrete årsag findes i Worker-loggen.",
       );
     }
     const out = (result as { response?: string }).response || "";
