@@ -27,7 +27,11 @@ try {
     console.log(
       "Log ind på din Cloudflare-konto. Brug den konto, hvor Worker visitkort ligger.",
     );
-    run(["login"]);
+    run(
+      process.env.CODESPACES === "true" || process.argv.includes("--device")
+        ? ["login", "--device"]
+        : ["login"],
+    );
     console.log("\nOpret D1-databasen, hvis den ikke findes:");
     console.log("  npx wrangler d1 create visitkort-db");
     console.log(
