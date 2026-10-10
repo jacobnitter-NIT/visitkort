@@ -12,6 +12,10 @@ const files = [
 ];
 const hash = createHash("sha256")
   .update(await readFile("dist/index.html"))
+  // Cached responses include CSP headers, so security-policy changes need a new cache.
+  .update(await readFile("dist/_headers"))
+  .update(await readFile("worker/index.ts"))
+  .update(await readFile("wrangler.jsonc"))
   .digest("hex")
   .slice(0, 12);
 await writeFile(
