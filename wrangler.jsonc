@@ -1,0 +1,32 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "visitkort",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-10",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "visitkort-db",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "visitkort-files",
+    },
+  ],
+  "ai": {
+    "binding": "AI",
+  },
+  "triggers": {
+    "crons": ["0 4 * * *"],
+  },
+}

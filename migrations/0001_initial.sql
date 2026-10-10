@@ -1,0 +1,11 @@
+PRAGMA foreign_keys=ON;
+CREATE TABLE contacts (id TEXT PRIMARY KEY, name TEXT NOT NULL, company TEXT NOT NULL DEFAULT '', email TEXT NOT NULL DEFAULT '', phone TEXT NOT NULL DEFAULT '', data TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE INDEX contacts_email ON contacts(email);
+CREATE INDEX contacts_phone ON contacts(phone);
+CREATE TABLE interactions (id TEXT PRIMARY KEY, contact_id TEXT NOT NULL REFERENCES contacts(id) ON DELETE CASCADE, kind TEXT NOT NULL, happened_at TEXT NOT NULL, note TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE INDEX interactions_contact ON interactions(contact_id,happened_at);
+CREATE TABLE profile (id INTEGER PRIMARY KEY CHECK(id=1), data TEXT NOT NULL);
+CREATE TABLE shares (token TEXT PRIMARY KEY, kind TEXT NOT NULL, contact_id TEXT, data TEXT NOT NULL, created_at TEXT NOT NULL, expires_at TEXT, revoked INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX shares_contact ON shares(contact_id);
+CREATE TABLE files (id TEXT PRIMARY KEY, mime TEXT NOT NULL, size INTEGER NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE login_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, reset_at INTEGER NOT NULL);
