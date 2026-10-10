@@ -75,3 +75,16 @@ Nye scanninger og aflæsning af offline-kladder viser automatisk et forslag til 
 DA/EN-valget huskes på enheden. Statusværdier og kontaktdata ændres ikke af sprogvalget. Offentlige kort åbner på engelsk, også hvis ejeren bruger appen på dansk. Egne navne, titler, selskaber og noter oversættes ikke.
 
 Validering: syntetiske billeder med lige og skrå kort samt baggrund uden kort; perspektivkorrektion og ugyldige hjørner; sprogvalg og offentlig engelsk visning; eksisterende database-, login- og delingstests. Kamera, touch-drag og kantgenkendelse på virkelige visitkort er ikke testet på en fysisk telefon.
+
+## Conference overview
+
+The **Konferencer / Conferences** tab groups contacts by their existing event name. Each event can store its date, location, notes, shared next action, follow-up date and completion status. Contact rows expand independently; adding or scanning a contact from a conference preselects that event. Conference notes are private and included in JSON export/import. Import preserves existing conference records with the same name.
+
+Apply the database migration before publishing this version:
+
+```bash
+npm run db:remote
+npm run deploy
+```
+
+Existing contacts need no migration; their event names automatically populate the overview.

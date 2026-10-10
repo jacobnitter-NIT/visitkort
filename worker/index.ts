@@ -1,3 +1,4 @@
+import { sanitizeConference } from "../src/conference-model";
 import { SignJWT, jwtVerify } from "jose";
 import {
   blankCard,
@@ -324,6 +325,29 @@ async function api(req: Request, e: Env) {
         ? "Log ind for at fortsætte."
         : "Appen skal konfigureres før brug.",
     );
+  if (p === "/api/conferences" && m === "GET") {
+    const rows = await e.DB.prepare(
+      "SELECT id,data,updated_at FROM conferences ORDER BY updated_at DESC",
+    ).all<{ id: string; data: string; updated_at: string }>();
+    return json(
+      rows.results.map(({ data, ...row }) => ({ ...JSON.parse(data), ...row })),
+    );
+  }
+  if (p === "/api/conferences" && m === "PUT") {
+    const c = sanitizeConference(await body(req));
+    if (!c.name) fail(400, "Skriv konferencens navn.");
+    await e.DB.prepare(
+      "INSERT INTO conferences(id,name,data,updated_at) VALUES(?,?,?,?) ON CONFLICT(name) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at",
+    )
+      .bind(crypto.randomUUID(), c.name, JSON.stringify(c), now())
+      .run();
+    const row = await e.DB.prepare(
+      "SELECT id,updated_at FROM conferences WHERE name=?",
+    )
+      .bind(c.name)
+      .first();
+    return json({ ...c, ...row });
+  }
   if (p === "/api/contacts" && m === "GET") {
     const rows = await e.DB.prepare(
       "SELECT id,data,created_at,updated_at FROM contacts ORDER BY updated_at DESC LIMIT 5000",
@@ -592,6 +616,11 @@ async function api(req: Request, e: Env) {
       })),
       interactions: notes.results,
       profile: await getProfile(e),
+      conferences: (
+        await e.DB.prepare("SELECT data FROM conferences").all<{
+          data: string;
+        }>()
+      ).results.map((r) => JSON.parse(r.data)),
       images_included: false,
     });
   }
@@ -652,6 +681,18 @@ async function api(req: Request, e: Env) {
         ),
       );
       n++;
+    }
+    for (const input of Array.isArray(b.conferences)
+      ? b.conferences.slice(0, 1000)
+      : []) {
+      const c = sanitizeConference(input);
+      if (!c.name) continue;
+      // Keep existing conference notes when importing an older backup.
+      statements.push(
+        e.DB.prepare(
+          "INSERT INTO conferences(id,name,data,updated_at) VALUES(?,?,?,?) ON CONFLICT(name) DO NOTHING",
+        ).bind(crypto.randomUUID(), c.name, JSON.stringify(c), now()),
+      );
     }
     if (statements.length) await e.DB.batch(statements);
     return json({ count, interactions: n });

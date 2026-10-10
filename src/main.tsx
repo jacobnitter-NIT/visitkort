@@ -1,3 +1,4 @@
+import { Conferences } from "./Conferences";
 import { tr, trf, useLanguage, getLanguage, LanguagePicker } from "./i18n";
 import React, { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
@@ -7,6 +8,7 @@ import {
   Users,
   ScanLine,
   CalendarClock,
+  CalendarDays,
   ContactRound,
   Settings,
   Search,
@@ -546,6 +548,7 @@ function App() {
           {[
             [LayoutDashboard, "Overblik"],
             [Users, "Kontakter"],
+            [CalendarDays, "Konferencer"],
             [CalendarClock, "Opfølgning"],
             [ContactRound, "Mit visitkort"],
             [Settings, "Indstillinger"],
@@ -651,6 +654,25 @@ function App() {
           </div>
         )}
         <div className="content">
+          {page === "Konferencer" && (
+            <Conferences
+              cards={cards}
+              onContact={(c) => {
+                setPage("Kontakter");
+                setSelected(c);
+              }}
+              onAdd={(name) => {
+                setEditProfile(false);
+                setEdit({ ...blankCard(), event: name, met_at: today() });
+              }}
+              onScan={(name) => {
+                setEvent(name);
+                setScan(true);
+              }}
+              onError={notify}
+            />
+          )}
+
           {page === "Overblik" && (
             <>
               <div className="page-heading">
@@ -1490,6 +1512,7 @@ function App() {
         {[
           [LayoutDashboard, "Overblik"],
           [Users, "Kontakter"],
+          [CalendarDays, "Konferencer"],
           [ScanLine, "Scan"],
           [CalendarClock, "Opfølgning"],
           [ContactRound, "Mit visitkort"],
