@@ -8,25 +8,30 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"],
+    "run_worker_first": [
+      "/api/*"
+    ]
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "visitkort-db",
       "migrations_dir": "migrations",
-    },
+      "database_id": "f3232ae8-8323-4ea6-b09d-aaf95cb22d80"
+    }
   ],
   "r2_buckets": [
     {
       "binding": "FILES",
-      "bucket_name": "visitkort-files",
-    },
+      "bucket_name": "visitkort-files"
+    }
   ],
   "ai": {
-    "binding": "AI",
+    "binding": "AI"
   },
   "triggers": {
-    "crons": ["0 4 * * *"],
-  },
+    "crons": [
+      "0 4 * * *"
+    ]
+  }
 }
