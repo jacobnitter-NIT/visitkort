@@ -1,0 +1,5 @@
+Automatic card cropping uses OpenCV.js, distributed via @techstark/opencv-js.
+OpenCV: https://github.com/opencv/opencv
+JavaScript package: https://github.com/TechStark/opencv-js
+OpenCV is licensed under the Apache License, Version 2.0. See opencv-LICENSE.txt.
+The compiled asset is redistributed without modification.

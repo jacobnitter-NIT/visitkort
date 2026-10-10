@@ -3,7 +3,8 @@
 Privat kontaktbibliotek, visitkortscanner og et let CRM til Cloudflare Workers, D1 og R2.
 
 - Mobilvenlig app, som kan installeres på hjemmeskærmen.
-- Foto af visitkort → Workers AI → gennemgang → gem kontakt.
+- Foto af visitkort → automatisk kantgenkendelse/beskæring med perspektivkorrektion → Workers AI → gennemgang → gem kontakt.
+- Dansk/engelsk sprogvalg i appen; offentlige profil- og delingskort åbner på engelsk.
 - QR-import fra kamera, billede, vCard, MeCard eller et weblink.
 - Eget digitalt visitkort med billede, vCard-QR og valgfrit offentligt profillink.
 - Del udvalgte kontaktfelter med kolleger via links, der udløber og kan tilbagekaldes.
@@ -57,7 +58,7 @@ R2 skal forblive privat. Billeder leveres via API'et. Ubrugte billeder ryddes op
 - Telefonkontakter gemmes via vCard-import. Der er ingen automatisk Google/Microsoft-synkronisering.
 - En QR med et eksternt weblink importeres som et link. Appen scraper ikke tredjepartssider. Egne aktive profillinks kan importeres som kontaktfelter.
 - Scanning kan fejllæse tekst. Kontrollér felterne før gemning. Foto sendes til Cloudflare Workers AI; billeder og kontaktdata kan medføre forbrug på din konto.
-- Automatisk beskæring, redigering af eksisterende interaktionsnoter og mailpåmindelser er ikke med. Interaktioner kan tilføjes og slettes; opfølgningslisten vises i appen.
+- Kantgenkendelse kan ramme forkert ved uklare kanter, lav kontrast eller mange objekter. Du kan rette de fire hjørner eller vælge hele billedet. Redigering af eksisterende interaktionsnoter og mailpåmindelser er ikke med. Interaktioner kan tilføjes og slettes; opfølgningslisten vises i appen.
 - JSON er en dataeksport, ikke et komplet billedbackup. Den inkluderer profilfelter, men import genskaber kun kontakter og historik. Billeder og profil genskabes separat. Import er atomisk og tilføjer nye poster, maks. 1000 kontakter ad gangen (1,5 MB JSON).
 - Biblioteket indlæser op til 5000 kontakter. Denne version er beregnet til et privat bibliotek.
 - Offline-kladder er lokale og uploades ikke automatisk. De forbliver på enheden efter logout, indtil de aflæses eller slettes. Private kontaktlister og API-svar caches ikke af service workeren.
@@ -66,3 +67,11 @@ R2 skal forblive privat. Billeder leveres via API'et. Ubrugte billeder ryddes op
 ## Struktur
 
 `src/`: React-app og kontaktformater. `worker/`: API, login og billedaflæsning. `migrations/`: D1-tabeller. `public/`: PWA-ikoner og headers. `scripts/`: engangsopsætning og sikker caching af appskallen. `tests/`: vCard/QR og D1/R2-adgangstests.
+
+## Beskæring og sprog
+
+Nye scanninger og aflæsning af offline-kladder viser automatisk et forslag til beskæring. Godkend forslaget eller flyt hjørnerne; perspektivkorrektion anvendes inden upload, og det beskårne billede bruges både til aflæsning og lagring. Allerede gemte billeder beskæres ikke automatisk. Kantgenkendelsen kører lokalt i en Web Worker med OpenCV.js (Apache-2.0). Motoren downloades ved første brug (ca. 13 MB) og caches derefter, når service workeren er aktiv. Workers AI kræver fortsat internet.
+
+DA/EN-valget huskes på enheden. Statusværdier og kontaktdata ændres ikke af sprogvalget. Offentlige kort åbner på engelsk, også hvis ejeren bruger appen på dansk. Egne navne, titler, selskaber og noter oversættes ikke.
+
+Validering: syntetiske billeder med lige og skrå kort samt baggrund uden kort; perspektivkorrektion og ugyldige hjørner; sprogvalg og offentlig engelsk visning; eksisterende database-, login- og delingstests. Kamera, touch-drag og kantgenkendelse på virkelige visitkort er ikke testet på en fysisk telefon.

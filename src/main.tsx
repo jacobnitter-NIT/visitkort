@@ -1,5 +1,7 @@
+import { tr, trf, useLanguage, getLanguage, LanguagePicker } from "./i18n";
 import React, { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
+import { CardCrop } from "./CardCrop";
 import {
   LayoutDashboard,
   Users,
@@ -71,7 +73,7 @@ const today = () => new Date().toLocaleDateString("sv-SE");
 const date = (v: string) =>
   v
     ? new Date(v.length === 10 ? v + "T12:00:00" : v).toLocaleDateString(
-        "da-DK",
+        getLanguage() === "en" ? "en-GB" : "da-DK",
         { day: "numeric", month: "short", year: "numeric" },
       )
     : "";
@@ -142,8 +144,8 @@ function Empty({
       <div className="empty-icon">
         <ContactRound size={30} />
       </div>
-      <h3>{title}</h3>
-      <p>{text}</p>
+      <h3>{tr(title)}</h3>
+      <p>{tr(text)}</p>
       {action}
     </div>
   );
@@ -167,9 +169,9 @@ function QR({ value }: { value: string }) {
       );
   }, [value]);
   return err ? (
-    <p className="warning">{err}</p>
+    <p className="warning">{tr(err)}</p>
   ) : src ? (
-    <img className="qr" src={src} alt="QR-kode til kontaktoplysninger" />
+    <img className="qr" src={src} alt={tr("QR-kode til kontaktoplysninger")} />
   ) : (
     <LoaderCircle className="spin" />
   );
@@ -238,10 +240,10 @@ function Modal({
       >
         <header>
           <div>
-            <h2>{title}</h2>
-            {subtitle && <p>{subtitle}</p>}
+            <h2>{tr(title)}</h2>
+            {subtitle && <p>{tr(subtitle)}</p>}
           </div>
-          <button className="icon-btn" aria-label="Luk" onClick={onClose}>
+          <button className="icon-btn" aria-label={tr("Luk")} onClick={onClose}>
             <X />
           </button>
         </header>
@@ -251,6 +253,8 @@ function Modal({
   );
 }
 function App() {
+  useLanguage();
+  const [crop, setCrop] = useState<{ file: File; draft?: Draft } | null>(null);
   const [auth, setAuth] = useState<boolean | null>(null),
     [configured, setConfigured] = useState(true),
     [password, setPassword] = useState(""),
@@ -280,7 +284,7 @@ function App() {
   } | null>(null);
   const publicToken = location.pathname.match(/^\/p\/([a-f0-9]{64})$/)?.[1];
   function notify(s: string) {
-    setToast(s);
+    setToast(tr(s));
     setTimeout(() => setToast(""), 4500);
   }
   async function load() {
@@ -332,36 +336,39 @@ function App() {
     return (
       <div className="center">
         <LoaderCircle className="spin" />
-        <p>Åbner dit netværk…</p>
+        <p>{tr("Åbner dit netværk…")}</p>
       </div>
     );
   if (!auth)
     return (
       <div className="login">
+        <div className="login-language">
+          <LanguagePicker />
+        </div>
         <div className="login-brand">
           <div className="brand-mark">
             <ContactRound />
           </div>
           <h1>
-            Gode relationer
+            {tr("Gode relationer")}
             <br />
-            starter med et møde.
+            {tr("starter med et møde.")}
           </h1>
           <p>
-            Et visitkort er begyndelsen.
+            {tr("Et visitkort er begyndelsen.")}
             <br />
-            Her holder du forbindelsen.
+            {tr("Her holder du forbindelsen.")}
           </p>
           <div className="login-decoration">
-            <span>Dit netværk</span>
+            <span>{tr("Dit netværk")}</span>
             <ContactRound size={80} />
-            <span>Samlet ét sted</span>
+            <span>{tr("Samlet ét sted")}</span>
           </div>
         </div>
         <div className="login-form">
-          <span className="eyebrow">DIT PRIVATE NETVÆRK</span>
-          <h2>Velkommen tilbage</h2>
-          <p>Log ind for at se dine kontakter og følge op.</p>
+          <span className="eyebrow">{tr("DIT PRIVATE NETVÆRK")}</span>
+          <h2>{tr("Velkommen tilbage")}</h2>
+          <p>{tr("Log ind for at se dine kontakter og følge op.")}</p>
           <form
             onSubmit={async (e) => {
               e.preventDefault();
@@ -383,7 +390,7 @@ function App() {
             }}
           >
             <label>
-              Adgangskode
+              {tr("Adgangskode")}
               <input
                 type="password"
                 autoComplete="current-password"
@@ -395,13 +402,14 @@ function App() {
             </label>
             {error && (
               <p role="alert" className="warning">
-                {error}
+                {tr(error)}
               </p>
             )}
             {!configured && (
               <p className="warning">
-                Appen er endnu ikke konfigureret. Følg INSTALLATION.md for
-                database og login.
+                {tr(
+                  "Appen er endnu ikke konfigureret. Følg INSTALLATION.md for database og login.",
+                )}
               </p>
             )}
             <button className="primary full" disabled={!!busy || !configured}>
@@ -410,11 +418,12 @@ function App() {
               ) : (
                 <Lock size={18} />
               )}
-              Åbn Visitkort
+              {tr("Åbn Visitkort")}
             </button>
           </form>
           <div className="private-hint">
-            <ShieldCheck size={17} /> Kun du har adgang til kontaktbiblioteket.
+            <ShieldCheck size={17} />
+            {tr("Kun du har adgang til kontaktbiblioteket.")}
           </div>
           {!online && (
             <OfflineCapture
@@ -426,7 +435,10 @@ function App() {
             />
           )}
           {pending.length > 0 && (
-            <p>{pending.length} scanningskladder gemt på denne enhed.</p>
+            <p>
+              {pending.length}
+              {tr("scanningskladder gemt på denne enhed.")}
+            </p>
           )}
         </div>
         {toast && <div className="toast">{toast}</div>}
@@ -529,7 +541,7 @@ function App() {
           </span>
           visitkort<span className="brand-dot">.</span>
         </a>
-        <span className="nav-caption">DIT NETVÆRK</span>
+        <span className="nav-caption">{tr("DIT NETVÆRK")}</span>
         <nav>
           {[
             [LayoutDashboard, "Overblik"],
@@ -541,7 +553,7 @@ function App() {
             const I = Icon as typeof Users;
             return (
               <button
-                key={String(name)}
+                key={tr(String(name))}
                 className={page === name ? "active" : ""}
                 onClick={() => {
                   setPage(String(name));
@@ -550,7 +562,7 @@ function App() {
                 }}
               >
                 <I size={20} />
-                {String(name)}
+                {tr(String(name))}
                 {name === "Opfølgning" && due.length > 0 && (
                   <span className="nav-count">{due.length}</span>
                 )}
@@ -561,26 +573,30 @@ function App() {
         <div className="sidebar-tip">
           <QrCode size={24} />
           <strong>
-            Dit næste møde.
+            {tr("Dit næste møde.")}
             <br />
-            Din næste forbindelse.
+            {tr("Din næste forbindelse.")}
           </strong>
-          <p>Del dit eget visitkort med en QR-kode.</p>
+          <p>{tr("Del dit eget visitkort med en QR-kode.")}</p>
           <button onClick={() => setPage("Mit visitkort")}>
-            Åbn mit visitkort <ArrowUpRight size={16} />
+            {tr("Åbn mit visitkort")}
+            <ArrowUpRight size={16} />
           </button>
         </div>
         <div className="owner">
-          <Avatar card={profile.name ? profile : { name: "Privat bruger" }} />
+          <Avatar
+            card={profile.name ? profile : { name: tr("Privat bruger") }}
+          />
           <div>
-            <strong>{profile.name || "Dit private netværk"}</strong>
+            <strong>{profile.name || tr("Dit private netværk")}</strong>
             <span>
-              <Lock size={11} /> Personligt bibliotek
+              <Lock size={11} />
+              {tr("Personligt bibliotek")}
             </span>
           </div>
           <button
             className="icon-btn"
-            aria-label="Log ud"
+            aria-label={tr("Log ud")}
             onClick={() =>
               run(async () => {
                 await api("/logout", { method: "POST" });
@@ -599,21 +615,23 @@ function App() {
       <main>
         <header className="topbar">
           <span className="breadcrumb">
-            Dit netværk <ChevronRight size={14} /> <strong>{page}</strong>
+            {tr("Dit netværk")}
+            <ChevronRight size={14} /> <strong>{tr(page)}</strong>
           </span>
           <div className="top-actions">
+            <LanguagePicker />
             <span className={"connection " + (!online ? "offline" : "")}>
               <i />
-              {online ? "Privat & online" : "Offline"}
+              {online ? tr("Privat & online") : "Offline"}
             </span>
             <button className="primary" onClick={() => setScan(true)}>
-              <ScanLine size={18} /> <span>Scan visitkort</span>
+              <ScanLine size={18} /> <span>{tr("Scan visitkort")}</span>
             </button>
           </div>
         </header>
         {error && (
           <div role="alert" className="warning">
-            {error}
+            {tr(error)}
             <button
               onClick={() =>
                 run(async () => {
@@ -622,14 +640,14 @@ function App() {
                 })
               }
             >
-              Prøv igen
+              {tr("Prøv igen")}
             </button>
           </div>
         )}
         {!online && (
           <div className="offline-strip">
-            <WifiOff size={17} /> Ingen forbindelse. Du kan gemme fotos som
-            scanningskladder.
+            <WifiOff size={17} />
+            {tr("Ingen forbindelse. Du kan gemme fotos som scanningskladder.")}
           </div>
         )}
         <div className="content">
@@ -637,14 +655,16 @@ function App() {
             <>
               <div className="page-heading">
                 <div>
-                  <span className="eyebrow">RELATIONER, DER VARER</span>
+                  <span className="eyebrow">{tr("RELATIONER, DER VARER")}</span>
                   <h1>
                     {profile.name
-                      ? `Hej ${profile.name.split(" ")[0]}.`
-                      : "Dit netværk, samlet."}
+                      ? trf("Hej {name}.", { name: profile.name.split(" ")[0] })
+                      : tr("Dit netværk, samlet.")}
                   </h1>
                   <p>
-                    Hold forbindelsen. Gør det næste møde til en god relation.
+                    {tr(
+                      "Hold forbindelsen. Gør det næste møde til en god relation.",
+                    )}
                   </p>
                 </div>
                 <button
@@ -654,7 +674,8 @@ function App() {
                     setEdit({ ...blankCard(), event, met_at: today() });
                   }}
                 >
-                  <Plus size={17} /> Tilføj kontakt
+                  <Plus size={17} />
+                  {tr("Tilføj kontakt")}
                 </button>
               </div>
               <div className="stats">
@@ -668,7 +689,11 @@ function App() {
                   label="Opfølgninger nu"
                   value={due.length}
                   icon={<CalendarClock />}
-                  note={due.length ? "Klar til næste skridt" : "Du er helt med"}
+                  note={
+                    due.length
+                      ? tr("Klar til næste skridt")
+                      : tr("Du er helt med")
+                  }
                 />
                 <Stat
                   label="Selskaber"
@@ -687,14 +712,15 @@ function App() {
                 <section className="panel">
                   <div className="panel-heading">
                     <div>
-                      <span className="eyebrow">NÆSTE SKRIDT</span>
-                      <h2>Tid til at følge op</h2>
+                      <span className="eyebrow">{tr("NÆSTE SKRIDT")}</span>
+                      <h2>{tr("Tid til at følge op")}</h2>
                     </div>
                     <button
                       className="text-btn"
                       onClick={() => setPage("Opfølgning")}
                     >
-                      Se alle <ArrowUpRight size={16} />
+                      {tr("Se alle")}
+                      <ArrowUpRight size={16} />
                     </button>
                   </div>
                   {due.length ? (
@@ -734,22 +760,26 @@ function App() {
                     ))
                   ) : (
                     <Empty
-                      title="Plads til næste forbindelse"
-                      text="Tilføj en opfølgningsdato på en kontakt. Så husker appen, hvem du skal tage fat i."
+                      title={tr("Plads til næste forbindelse")}
+                      text={tr(
+                        "Tilføj en opfølgningsdato på en kontakt. Så husker appen, hvem du skal tage fat i.",
+                      )}
                     />
                   )}
                 </section>
                 <section className="scan-feature">
-                  <span className="eyebrow">FRA VISITKORT TIL RELATION</span>
+                  <span className="eyebrow">
+                    {tr("FRA VISITKORT TIL RELATION")}
+                  </span>
                   <h2>
-                    Et foto.
+                    {tr("Et foto.")}
                     <br />
-                    En ny forbindelse.
+                    {tr("En ny forbindelse.")}
                   </h2>
                   <p>
-                    Scan et visitkort eller en QR-kode.
+                    {tr("Scan et visitkort eller en QR-kode.")}
                     <br />
-                    Gem detaljerne, mens mødet er frisk.
+                    {tr("Gem detaljerne, mens mødet er frisk.")}
                   </p>
                   <div className="illustrated-card">
                     <span className="mini-logo">
@@ -763,31 +793,32 @@ function App() {
                     <QrCode size={40} />
                   </div>
                   <button onClick={() => setScan(true)}>
-                    <ScanLine size={19} /> Scan et visitkort{" "}
-                    <ArrowUpRight size={18} />
+                    <ScanLine size={19} />
+                    {tr("Scan et visitkort")} <ArrowUpRight size={18} />
                   </button>
                 </section>
               </div>
               <section className="panel recent">
                 <div className="panel-heading">
                   <div>
-                    <span className="eyebrow">NYE FORBINDELSER</span>
-                    <h2>Senest tilføjet</h2>
+                    <span className="eyebrow">{tr("NYE FORBINDELSER")}</span>
+                    <h2>{tr("Senest tilføjet")}</h2>
                   </div>
                   <button
                     className="text-btn"
                     onClick={() => setPage("Kontakter")}
                   >
-                    Alle kontakter <ArrowUpRight size={16} />
+                    {tr("Alle kontakter")}
+                    <ArrowUpRight size={16} />
                   </button>
                 </div>
                 {cards.length ? (
                   <div className="contact-table">
                     <div className="table-head">
-                      <span>PERSON</span>
-                      <span>SELSKAB</span>
-                      <span>MØDESTED</span>
-                      <span>STATUS</span>
+                      <span>{tr("PERSON")}</span>
+                      <span>{tr("SELSKAB")}</span>
+                      <span>{tr("MØDESTED")}</span>
+                      <span>{tr("STATUS")}</span>
                     </div>
                     {[...cards]
                       .sort((a, b) =>
@@ -807,7 +838,9 @@ function App() {
                             <Avatar card={c} />
                             <div>
                               <strong>{c.name}</strong>
-                              <small>{c.title || c.email || "Kontakt"}</small>
+                              <small>
+                                {c.title || c.email || tr("Kontakt")}
+                              </small>
                             </div>
                           </div>
                           <span>{c.company || "—"}</span>
@@ -820,11 +853,14 @@ function App() {
                   </div>
                 ) : (
                   <Empty
-                    title="Dit netværk starter her"
-                    text="Scan dit første visitkort eller opret en kontakt manuelt."
+                    title={tr("Dit netværk starter her")}
+                    text={tr(
+                      "Scan dit første visitkort eller opret en kontakt manuelt.",
+                    )}
                     action={
                       <button className="primary" onClick={() => setScan(true)}>
-                        <ScanLine size={17} /> Scan dit første kort
+                        <ScanLine size={17} />
+                        {tr("Scan dit første kort")}
                       </button>
                     }
                   />
@@ -834,7 +870,7 @@ function App() {
                 <DraftList
                   pending={pending}
                   busy={!!busy}
-                  onScan={(d) => run(() => photoScan(d.file, d))}
+                  onScan={(d) => setCrop({ file: d.file, draft: d })}
                   onDelete={(d) =>
                     run(async () => {
                       await deleteDraft(d.id);
@@ -849,12 +885,14 @@ function App() {
             <>
               <div className="page-heading">
                 <div>
-                  <span className="eyebrow">MENNESKERNE BAG KORTENE</span>
+                  <span className="eyebrow">
+                    {tr("MENNESKERNE BAG KORTENE")}
+                  </span>
                   <h1>
-                    Kontakter{" "}
+                    {tr("Kontakter")}{" "}
                     <span className="title-count">{cards.length}</span>
                   </h1>
-                  <p>Søg, find og hold forbindelsen.</p>
+                  <p>{tr("Søg, find og hold forbindelsen.")}</p>
                 </div>
                 <button
                   className="primary"
@@ -863,7 +901,8 @@ function App() {
                     setEdit({ ...blankCard(), event, met_at: today() });
                   }}
                 >
-                  <Plus size={18} /> Ny kontakt
+                  <Plus size={18} />
+                  {tr("Ny kontakt")}
                 </button>
               </div>
               <div className="contact-workspace">
@@ -875,8 +914,8 @@ function App() {
                   <div className="search-box">
                     <Search size={18} />
                     <input
-                      aria-label="Søg kontakter"
-                      placeholder="Søg navn, selskab, konference…"
+                      aria-label={tr("Søg kontakter")}
+                      placeholder={tr("Søg navn, selskab, konference…")}
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                     />
@@ -888,7 +927,7 @@ function App() {
                         className={status === s ? "selected" : ""}
                         onClick={() => setStatus(s)}
                       >
-                        {s === "Favoritter" && <Star size={13} />} {s}
+                        {s === "Favoritter" && <Star size={13} />} {tr(s)}
                       </button>
                     ))}
                   </div>
@@ -928,12 +967,16 @@ function App() {
                     ) : (
                       <Empty
                         title={
-                          query ? "Ingen resultater" : "Ingen kontakter endnu"
+                          query
+                            ? tr("Ingen resultater")
+                            : tr("Ingen kontakter endnu")
                         }
                         text={
                           query
-                            ? "Prøv et andet navn, selskab eller tag."
-                            : "Tilføj din første kontakt med kameraet eller manuelt."
+                            ? tr("Prøv et andet navn, selskab eller tag.")
+                            : tr(
+                                "Tilføj din første kontakt med kameraet eller manuelt.",
+                              )
                         }
                       />
                     )}
@@ -961,7 +1004,10 @@ function App() {
                     onDelete={() =>
                       setConfirm({
                         title: "Slet kontakt?",
-                        description: `${selected.name} og kontaktens historik slettes. Delingslinks bliver også fjernet.`,
+                        description: trf(
+                          "{name} og kontaktens historik slettes. Delingslinks bliver også fjernet.",
+                          { name: selected.name },
+                        ),
                         action: async () => {
                           await api("/contacts/" + selected.id, {
                             method: "DELETE",
@@ -975,7 +1021,10 @@ function App() {
                     onMerge={(remove) =>
                       setConfirm({
                         title: "Sammenlæg kontakter?",
-                        description: `Behold ${selected.name}, tilføj manglende felter og historik fra ${remove.name}, og slet dubletten. Dublettens delingslinks deaktiveres.`,
+                        description: trf(
+                          "Behold {name}, tilføj manglende felter og historik fra {other}, og slet dubletten. Dublettens delingslinks deaktiveres.",
+                          { name: selected.name, other: remove.name },
+                        ),
                         action: async () => {
                           await api("/merge", {
                             method: "POST",
@@ -994,11 +1043,11 @@ function App() {
                 ) : (
                   <div className="detail-placeholder">
                     <ContactRound size={46} />
-                    <h3>Et menneske bag hvert kort</h3>
+                    <h3>{tr("Et menneske bag hvert kort")}</h3>
                     <p>
-                      Vælg en kontakt for at se detaljer,
+                      {tr("Vælg en kontakt for at se detaljer,")}
                       <br />
-                      noter og jeres seneste interaktioner.
+                      {tr("noter og jeres seneste interaktioner.")}
                     </p>
                   </div>
                 )}
@@ -1009,15 +1058,18 @@ function App() {
             <>
               <div className="page-heading">
                 <div>
-                  <span className="eyebrow">HOLD FORBINDELSEN</span>
-                  <h1>Det næste skridt.</h1>
-                  <p>Dine aftaler med dig selv — samlet ét sted.</p>
+                  <span className="eyebrow">{tr("HOLD FORBINDELSEN")}</span>
+                  <h1>{tr("Det næste skridt.")}</h1>
+                  <p>{tr("Dine aftaler med dig selv — samlet ét sted.")}</p>
                 </div>
               </div>
               <section className="panel">
                 <div className="panel-heading">
-                  <h2>Planlagte opfølgninger</h2>
-                  <span className="pill">{allFollow.length} i alt</span>
+                  <h2>{tr("Planlagte opfølgninger")}</h2>
+                  <span className="pill">
+                    {allFollow.length}
+                    {tr("i alt")}
+                  </span>
                 </div>
                 {allFollow.length ? (
                   allFollow.map((c) => (
@@ -1055,8 +1107,10 @@ function App() {
                   ))
                 ) : (
                   <Empty
-                    title="Ingen planlagte opfølgninger"
-                    text="Åbn en kontakt og vælg en dato og næste handling."
+                    title={tr("Ingen planlagte opfølgninger")}
+                    text={tr(
+                      "Åbn en kontakt og vælg en dato og næste handling.",
+                    )}
                   />
                 )}
               </section>
@@ -1066,9 +1120,11 @@ function App() {
             <>
               <div className="page-heading">
                 <div>
-                  <span className="eyebrow">GØR DET NEMT AT HOLDE KONTAKT</span>
-                  <h1>Dit digitale visitkort.</h1>
-                  <p>Alle dine detaljer. Klar til næste møde.</p>
+                  <span className="eyebrow">
+                    {tr("GØR DET NEMT AT HOLDE KONTAKT")}
+                  </span>
+                  <h1>{tr("Dit digitale visitkort.")}</h1>
+                  <p>{tr("Alle dine detaljer. Klar til næste møde.")}</p>
                 </div>
                 <button
                   className="primary"
@@ -1077,19 +1133,20 @@ function App() {
                     setEdit(profile);
                   }}
                 >
-                  <NotebookPen size={18} /> Rediger mit kort
+                  <NotebookPen size={18} />
+                  {tr("Rediger mit kort")}
                 </button>
               </div>
               <div className="profile-grid">
                 <div className="my-card">
                   <div className="card-top">
-                    <span>PERSONLIGT VISITKORT</span>
+                    <span>{tr("PERSONLIGT VISITKORT")}</span>
                     <ContactRound />
                   </div>
                   <Avatar card={profile} large />
-                  <h2>{profile.name || "Dit navn"}</h2>
+                  <h2>{profile.name || tr("Dit navn")}</h2>
                   <p>
-                    {profile.title || "Din titel"}
+                    {profile.title || tr("Din titel")}
                     {profile.company && (
                       <>
                         <br />
@@ -1116,11 +1173,13 @@ function App() {
                       {profile.website}
                     </span>
                   )}
-                  <div className="card-bottom">Et møde er kun begyndelsen.</div>
+                  <div className="card-bottom">
+                    {tr("Et møde er kun begyndelsen.")}
+                  </div>
                 </div>
                 <section className="panel share-profile">
-                  <span className="eyebrow">DEL DIN FORBINDELSE</span>
-                  <h2>Scan. Gem. Hold kontakt.</h2>
+                  <span className="eyebrow">{tr("DEL DIN FORBINDELSE")}</span>
+                  <h2>{tr("Scan. Gem. Hold kontakt.")}</h2>
                   {profile.name ? (
                     <>
                       <ProfileQR
@@ -1151,7 +1210,8 @@ function App() {
                             )
                           }
                         >
-                          <Download size={16} /> Kontaktfil
+                          <Download size={16} />
+                          {tr("Kontaktfil")}
                         </button>
                         {profileShare && (
                           <button
@@ -1166,22 +1226,25 @@ function App() {
                               )
                             }
                           >
-                            <Share2 size={16} /> Del link
+                            <Share2 size={16} />
+                            {tr("Del link")}
                           </button>
                         )}
                       </div>
                       {profileShare && (
                         <p className="fineprint">
-                          Alle med linket kan se dine kontaktoplysninger og dit
-                          billede. De kan ikke se kontaktbiblioteket eller dine
-                          noter. Ændringer i dit kort vises automatisk.
+                          {tr(
+                            "Alle med linket kan se dine kontaktoplysninger og dit billede. De kan ikke se kontaktbiblioteket eller dine noter. Ændringer i dit kort vises automatisk.",
+                          )}
                         </p>
                       )}
                     </>
                   ) : (
                     <Empty
-                      title="Sæt ansigt på dit netværk"
-                      text="Tilføj dine detaljer og et profilbillede for at gøre dit visitkort klar."
+                      title={tr("Sæt ansigt på dit netværk")}
+                      text={tr(
+                        "Tilføj dine detaljer og et profilbillede for at gøre dit visitkort klar.",
+                      )}
                       action={
                         <button
                           className="primary"
@@ -1190,7 +1253,7 @@ function App() {
                             setEdit(profile);
                           }}
                         >
-                          Opret mit visitkort
+                          {tr("Opret mit visitkort")}
                         </button>
                       }
                     />
@@ -1203,33 +1266,40 @@ function App() {
             <>
               <div className="page-heading">
                 <div>
-                  <span className="eyebrow">DU HAR KONTROLLEN</span>
-                  <h1>Dit bibliotek.</h1>
-                  <p>Administrér eksport, deling og dine scanningskladder.</p>
+                  <span className="eyebrow">{tr("DU HAR KONTROLLEN")}</span>
+                  <h1>{tr("Dit bibliotek.")}</h1>
+                  <p>
+                    {tr(
+                      "Administrér eksport, deling og dine scanningskladder.",
+                    )}
+                  </p>
                 </div>
               </div>
               <div className="settings-grid">
                 <section className="panel padded">
-                  <h2>Konferencetilstand</h2>
+                  <h2>{tr("Konferencetilstand")}</h2>
                   <p>
-                    Brug samme mødested til alle nye kontakter, indtil du ændrer
-                    det.
+                    {tr(
+                      "Brug samme mødested til alle nye kontakter, indtil du ændrer det.",
+                    )}
                   </p>
                   <label>
-                    Aktuelt event / mødested
+                    {tr("Aktuelt event / mødested")}
                     <input
                       value={event}
-                      placeholder="Fx konference, København, oktober 2026"
+                      placeholder={tr("Fx konference, København, oktober 2026")}
                       onChange={(e) => setEvent(e.target.value)}
                     />
                   </label>
                   <p className="fineprint">
-                    Gemmes på denne enhed og foreslås ved nye scanninger.
+                    {tr(
+                      "Gemmes på denne enhed og foreslås ved nye scanninger.",
+                    )}
                   </p>
                 </section>
                 <section className="panel padded">
-                  <h2>Eksport & import</h2>
-                  <p>Tag dine kontakter med dig.</p>
+                  <h2>{tr("Eksport & import")}</h2>
+                  <p>{tr("Tag dine kontakter med dig.")}</p>
                   <div className="button-row wrap">
                     <button
                       className="secondary"
@@ -1253,7 +1323,8 @@ function App() {
                         )
                       }
                     >
-                      <Download size={16} /> Alle kontakter
+                      <Download size={16} />
+                      {tr("Alle kontakter")}
                     </button>
                     <button
                       className="secondary"
@@ -1267,10 +1338,12 @@ function App() {
                         )
                       }
                     >
-                      <Download size={16} /> JSON-eksport
+                      <Download size={16} />
+                      {tr("JSON-eksport")}
                     </button>
                     <label className="secondary file-label">
-                      <Upload size={16} /> Importér JSON
+                      <Upload size={16} />
+                      {tr("Importér JSON")}
                       <input
                         type="file"
                         accept=".json"
@@ -1289,7 +1362,11 @@ function App() {
                                     body: JSON.stringify(data),
                                   });
                                   await load();
-                                  notify(`${r.count} kontakter importeret`);
+                                  notify(
+                                    trf("{count} kontakter importeret", {
+                                      count: r.count,
+                                    }),
+                                  );
                                 },
                               });
                             });
@@ -1299,16 +1376,15 @@ function App() {
                     </label>
                   </div>
                   <p className="fineprint">
-                    JSON indeholder kontakter, historik og egne profildata, men
-                    ikke billeder. Import tilføjer kontakter og historik;
-                    profilen skal udfyldes separat. CSV- og vCard-eksport
-                    indeholder ingen interaktionshistorik.
+                    {tr(
+                      "JSON indeholder kontakter, historik og egne profildata, men ikke billeder. Import tilføjer kontakter og historik; profilen skal udfyldes separat. CSV- og vCard-eksport indeholder ingen interaktionshistorik.",
+                    )}
                   </p>
                 </section>
               </div>
               <section className="panel">
                 <div className="panel-heading">
-                  <h2>Delingslinks</h2>
+                  <h2>{tr("Delingslinks")}</h2>
                   <span className="pill">
                     {
                       shares.filter(
@@ -1318,7 +1394,7 @@ function App() {
                             s.expires_at > new Date().toISOString()),
                       ).length
                     }{" "}
-                    aktive
+                    {tr("aktive")}
                   </span>
                 </div>
                 {shares.length ? (
@@ -1327,22 +1403,24 @@ function App() {
                       <div>
                         <strong>
                           {s.kind === "profile"
-                            ? "Mit offentlige visitkort"
+                            ? tr("Mit offentlige visitkort")
                             : s.name}
                         </strong>
                         <small>
                           {s.revoked
                             ? "Deaktiveret"
                             : s.expires_at
-                              ? `Udløber ${date(s.expires_at)}`
-                              : "Aktivt indtil du deaktiverer det"}
+                              ? trf("Udløber {date}", {
+                                  date: date(s.expires_at),
+                                })
+                              : tr("Aktivt indtil du deaktiverer det")}
                         </small>
                       </div>
                       {!s.revoked && (
                         <>
                           <button
                             className="icon-btn"
-                            aria-label="Kopiér link"
+                            aria-label={tr("Kopiér link")}
                             onClick={() =>
                               run(async () => {
                                 await navigator.clipboard.writeText(
@@ -1371,7 +1449,7 @@ function App() {
                               })
                             }
                           >
-                            Deaktivér
+                            {tr("Deaktivér")}
                           </button>
                         </>
                       )}
@@ -1379,8 +1457,10 @@ function App() {
                   ))
                 ) : (
                   <Empty
-                    title="Ingen delingslinks"
-                    text="Du kan dele dit eget kort eller en valgt kontakt."
+                    title={tr("Ingen delingslinks")}
+                    text={tr(
+                      "Du kan dele dit eget kort eller en valgt kontakt.",
+                    )}
                   />
                 )}
               </section>
@@ -1388,7 +1468,7 @@ function App() {
                 <DraftList
                   pending={pending}
                   busy={!!busy}
-                  onScan={(d) => run(() => photoScan(d.file, d))}
+                  onScan={(d) => setCrop({ file: d.file, draft: d })}
                   onDelete={(d) =>
                     run(async () => {
                       await deleteDraft(d.id);
@@ -1398,8 +1478,9 @@ function App() {
                 />
               )}
               <p className="fineprint">
-                Visitkort 1.0 · Privat bibliotek · Kontaktfiler og delingslinks
-                sendes kun, når du selv vælger at dele.
+                {tr(
+                  "Visitkort 1.0 · Privat bibliotek · Kontaktfiler og delingslinks sendes kun, når du selv vælger at dele.",
+                )}
               </p>
             </>
           )}
@@ -1416,7 +1497,7 @@ function App() {
           const I = Icon as typeof Users;
           return (
             <button
-              key={String(name)}
+              key={tr(String(name))}
               className={page === name ? "active" : ""}
               onClick={() => {
                 if (name === "Scan") setScan(true);
@@ -1428,14 +1509,14 @@ function App() {
             >
               <I size={21} />
               <span>
-                {name === "Mit visitkort" ? "Mit kort" : String(name)}
+                {name === "Mit visitkort" ? tr("Mit kort") : tr(String(name))}
               </span>
             </button>
           );
         })}
         <button
           className="mobile-settings"
-          aria-label="Indstillinger"
+          aria-label={tr("Indstillinger")}
           onClick={() => setPage("Indstillinger")}
         >
           <Settings size={19} />
@@ -1455,13 +1536,30 @@ function App() {
           notify={notify}
         />
       )}
-      {scan && (
+      {crop && (
+        <Modal
+          title={tr("Beskær dit visitkort")}
+          subtitle={tr("Kun kortet. Klar til aflæsning.")}
+          onClose={() => setCrop(null)}
+        >
+          <CardCrop
+            file={crop.file}
+            onCancel={() => setCrop(null)}
+            onUse={(file) => {
+              const draft = crop.draft;
+              setCrop(null);
+              run(() => photoScan(file, draft));
+            }}
+          />
+        </Modal>
+      )}
+      {scan && !crop && (
         <ScanModal
           busy={busy === "scan"}
           event={event}
           onEvent={setEvent}
           onClose={() => setScan(false)}
-          onPhoto={(f) => run(() => photoScan(f))}
+          onPhoto={(f) => setCrop({ file: f })}
           onQR={(c) =>
             run(async () => {
               let imported = c;
@@ -1503,12 +1601,12 @@ function App() {
         />
       )}
       {confirm && (
-        <Modal title={confirm.title} onClose={() => setConfirm(null)}>
+        <Modal title={tr(confirm.title)} onClose={() => setConfirm(null)}>
           <div className="padded">
-            <p>{confirm.description}</p>
+            <p>{tr(confirm.description)}</p>
             <div className="button-row">
               <button className="secondary" onClick={() => setConfirm(null)}>
-                Annullér
+                {tr("Annullér")}
               </button>
               <button
                 className="primary"
@@ -1525,7 +1623,7 @@ function App() {
                   })
                 }
               >
-                Bekræft
+                {tr("Bekræft")}
               </button>
             </div>
           </div>
@@ -1575,7 +1673,7 @@ function Badge({ text }: { text: string }) {
       }
     >
       <i />
-      {text}
+      {tr(text)}
     </span>
   );
 }
@@ -1594,19 +1692,19 @@ function FollowRow({
         <Avatar card={card} />
         <div>
           <strong>{card.name}</strong>
-          <span>{card.next_action || "Følg op på relationen"}</span>
+          <span>{card.next_action || tr("Følg op på relationen")}</span>
           <small>{card.company}</small>
         </div>
       </button>
       <span
         className={"due-date " + (card.follow_up < today() ? "overdue" : "")}
       >
-        {card.follow_up === today() ? "I dag" : date(card.follow_up)}
+        {card.follow_up === today() ? tr("I dag") : date(card.follow_up)}
       </span>
       <button
         className="done-btn"
-        title="Markér som afsluttet"
-        aria-label={"Afslut opfølgning for " + card.name}
+        title={tr("Markér som afsluttet")}
+        aria-label={tr("Afslut opfølgning for ") + card.name}
         onClick={onDone}
       >
         <Check size={17} />
@@ -1647,21 +1745,22 @@ function ProfileQR({
           className={mode === "data" ? "active" : ""}
           onClick={() => setMode("data")}
         >
-          Kontaktdata i QR
+          {tr("Kontaktdata i QR")}
         </button>
         <button
           className={mode === "link" ? "active" : ""}
           onClick={() => setMode("link")}
         >
-          Profil med billede
+          {tr("Profil med billede")}
         </button>
       </div>
       {mode === "data" ? (
         <>
           <QR value={vcard(profile)} />
           <p className="fineprint">
-            Kontaktdata ligger direkte i koden. Billedet medfølger via
-            profillinket.
+            {tr(
+              "Kontaktdata ligger direkte i koden. Billedet medfølger via profillinket.",
+            )}
           </p>
         </>
       ) : share ? (
@@ -1673,18 +1772,20 @@ function ProfileQR({
             target="_blank"
             rel="noreferrer"
           >
-            Vis offentligt kort <ExternalLink size={14} />
+            {tr("Vis offentligt kort")}
+            <ExternalLink size={14} />
           </a>
         </>
       ) : (
         <div className="activate-card">
           <LinkIcon size={28} />
           <p>
-            Aktivér en offentlig profil med dine kontaktoplysninger og dit
-            billede.
+            {tr(
+              "Aktivér en offentlig profil med dine kontaktoplysninger og dit billede.",
+            )}
           </p>
           <button className="primary" onClick={onActivate}>
-            Aktivér profillink
+            {tr("Aktivér profillink")}
           </button>
         </div>
       )}
@@ -1741,23 +1842,23 @@ function ContactDetail({
       <div className="detail-actions">
         <button
           className="icon-btn mobile-back"
-          aria-label="Tilbage til kontaktliste"
+          aria-label={tr("Tilbage til kontaktliste")}
           onClick={onBack}
         >
           <ArrowLeft />
         </button>
-        <span className="eyebrow">KONTAKTDETALJER</span>
+        <span className="eyebrow">{tr("KONTAKTDETALJER")}</span>
         <div>
           <button
             className={"icon-btn " + (card.favorite ? "favorite" : "")}
-            aria-label="Skift favorit"
+            aria-label={tr("Skift favorit")}
             onClick={() => onChange({ ...card, favorite: !card.favorite })}
           >
             <Star size={19} fill={card.favorite ? "currentColor" : "none"} />
           </button>
           <button
             className="icon-btn"
-            aria-label="Slet kontakt"
+            aria-label={tr("Slet kontakt")}
             onClick={onDelete}
           >
             <Trash2 size={18} />
@@ -1778,15 +1879,17 @@ function ContactDetail({
       </div>
       <div className="button-row detail-buttons">
         <button className="primary" onClick={onShare}>
-          <Share2 size={16} /> Del kontakt
+          <Share2 size={16} />
+          {tr("Del kontakt")}
         </button>
         <button className="secondary" onClick={onEdit}>
-          <NotebookPen size={16} /> Rediger
+          <NotebookPen size={16} />
+          {tr("Rediger")}
         </button>
         <button
           className="icon-btn"
-          title="Gem i telefonens kontakter"
-          aria-label="Hent kontaktfil"
+          title={tr("Gem i telefonens kontakter")}
+          aria-label={tr("Hent kontaktfil")}
           onClick={() => download("kontakt.vcf", vcard(card), "text/vcard")}
         >
           <Download size={19} />
@@ -1825,7 +1928,7 @@ function ContactDetail({
         <div className="met-box">
           <MapPin size={17} />
           <div>
-            <small>I MØDTES HER</small>
+            <small>{tr("I MØDTES HER")}</small>
             <strong>{card.event}</strong>
             {card.met_at && <span>{date(card.met_at)}</span>}
           </div>
@@ -1840,10 +1943,10 @@ function ContactDetail({
       </div>
       {duplicates.length > 0 && (
         <div className="warning">
-          Mulig dublet:{" "}
+          {tr("Mulig dublet:")}{" "}
           {duplicates.map((c) => (
             <button className="text-btn" key={c.id} onClick={() => onMerge(c)}>
-              {c.name} · Sammenlæg
+              {c.name} {tr("· Sammenlæg")}
             </button>
           ))}
         </div>
@@ -1855,7 +1958,7 @@ function ContactDetail({
             key={t}
             onClick={() => setTab(t)}
           >
-            {t}
+            {tr(t)}
           </button>
         ))}
       </div>
@@ -1864,7 +1967,8 @@ function ContactDetail({
           {card.notes && (
             <div className="private-note">
               <span>
-                <Lock size={12} /> DIN PRIVATE NOTE
+                <Lock size={12} />
+                {tr("DIN PRIVATE NOTE")}
               </span>
               <p>{card.notes}</p>
             </div>
@@ -1891,29 +1995,32 @@ function ContactDetail({
           >
             <textarea
               required
-              aria-label="Ny interaktion"
-              placeholder="Hvad talte I om? Hvad skal du huske?"
+              aria-label={tr("Ny interaktion")}
+              placeholder={tr("Hvad talte I om? Hvad skal du huske?")}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
             <div>
               <select
-                aria-label="Interaktionstype"
+                aria-label={tr("Interaktionstype")}
                 value={kind}
                 onChange={(e) => setKind(e.target.value)}
               >
                 {["Note", "Møde", "Telefon", "Mail", "Opfølgning"].map((t) => (
-                  <option key={t}>{t}</option>
+                  <option key={t} value={t}>
+                    {tr(t)}
+                  </option>
                 ))}
               </select>
               <input
-                aria-label="Interaktionsdato"
+                aria-label={tr("Interaktionsdato")}
                 type="date"
                 value={when}
                 onChange={(e) => setWhen(e.target.value)}
               />
               <button className="primary" disabled={busy}>
-                <Plus size={15} /> Gem
+                <Plus size={15} />
+                {tr("Gem")}
               </button>
             </div>
           </form>
@@ -1925,15 +2032,15 @@ function ContactDetail({
                 </div>
                 <div>
                   <strong>
-                    {i.kind} <small>{date(i.happened_at)}</small>
+                    {tr(i.kind)} <small>{date(i.happened_at)}</small>
                   </strong>
                   <p>{i.note}</p>
                 </div>
                 <button
                   className="icon-btn"
-                  aria-label="Slet interaktion"
+                  aria-label={tr("Slet interaktion")}
                   onClick={async () => {
-                    if (!window.confirm("Slet denne interaktion?")) return;
+                    if (!window.confirm(tr("Slet denne interaktion?"))) return;
                     try {
                       await api("/interactions/" + i.id, { method: "DELETE" });
                       setHistory(history.filter((x) => x.id !== i.id));
@@ -1948,7 +2055,7 @@ function ContactDetail({
             ))}
             {!history.length && (
               <p className="fineprint">
-                Tilføj den første note om jeres relation.
+                {tr("Tilføj den første note om jeres relation.")}
               </p>
             )}
           </div>
@@ -1975,16 +2082,16 @@ function ContactDetail({
                 <img
                   className="card-photo"
                   src={"/api/files/" + id}
-                  alt={"Visitkort side " + (i + 1)}
+                  alt={tr("Visitkort side ") + (i + 1)}
                 />
               </a>
             ))
           ) : (
-            <p>Ingen fotos gemt. Tilføj dem under Rediger.</p>
+            <p>{tr("Ingen fotos gemt. Tilføj dem under Rediger.")}</p>
           )}
           <QR value={vcard(card)} />
           <p className="fineprint">
-            Denne QR indeholder kun kontaktdata, ingen interne noter.
+            {tr("Denne QR indeholder kun kontaktdata, ingen interne noter.")}
           </p>
         </div>
       )}
@@ -2014,12 +2121,14 @@ function FollowForm({
           onChange={(e) => setC({ ...c, status: e.target.value })}
         >
           {statusNames.map((s) => (
-            <option key={s}>{s}</option>
+            <option key={s} value={s}>
+              {tr(s)}
+            </option>
           ))}
         </select>
       </label>
       <label>
-        Følg op den
+        {tr("Følg op den")}
         <input
           type="date"
           value={c.follow_up}
@@ -2027,15 +2136,16 @@ function FollowForm({
         />
       </label>
       <label>
-        Næste handling
+        {tr("Næste handling")}
         <textarea
-          placeholder="Fx send præsentation og aftal et møde"
+          placeholder={tr("Fx send præsentation og aftal et møde")}
           value={c.next_action}
           onChange={(e) => setC({ ...c, next_action: e.target.value })}
         />
       </label>
       <button className="primary">
-        <Check size={16} /> Gem opfølgning
+        <Check size={16} />
+        {tr("Gem opfølgning")}
       </button>
     </form>
   );
@@ -2071,15 +2181,15 @@ function EditCard({
     <Modal
       title={
         own
-          ? "Dit personlige visitkort"
+          ? tr("Dit personlige visitkort")
           : c.id
-            ? "Rediger kontakt"
-            : "En ny forbindelse"
+            ? tr("Rediger kontakt")
+            : tr("En ny forbindelse")
       }
       subtitle={
         own
-          ? "Disse kontaktoplysninger kan deles via dit visitkort."
-          : "Kontrollér detaljerne, før du gemmer."
+          ? tr("Disse kontaktoplysninger kan deles via dit visitkort.")
+          : tr("Kontrollér detaljerne, før du gemmer.")
       }
       onClose={onClose}
       wide
@@ -2102,7 +2212,9 @@ function EditCard({
             <div>
               <label className="secondary file-label">
                 <ImagePlus size={17} />
-                {c.portrait_id ? "Skift profilbillede" : "Tilføj profilbillede"}
+                {c.portrait_id
+                  ? tr("Skift profilbillede")
+                  : tr("Tilføj profilbillede")}
                 <input
                   type="file"
                   accept="image/*"
@@ -2126,7 +2238,7 @@ function EditCard({
                   className="text-btn"
                   onClick={() => set("portrait_id", "")}
                 >
-                  Fjern billede
+                  {tr("Fjern billede")}
                 </button>
               )}
             </div>
@@ -2134,7 +2246,7 @@ function EditCard({
           <div className="form-grid">
             {publicFields.map((k) => (
               <label key={k}>
-                {labels[k]}
+                {tr(labels[k])}
                 {k === "name" && <span className="required"> *</span>}
                 <input
                   required={k === "name"}
@@ -2155,22 +2267,23 @@ function EditCard({
           </div>
           {duplicate && (
             <p className="warning">
-              Der findes allerede en kontakt med denne mail: {duplicate.name}.
-              Du kan sammenlægge dem på kontaktens side.
+              {tr("Der findes allerede en kontakt med denne mail:")}{" "}
+              {duplicate.name}
+              {tr(". Du kan sammenlægge dem på kontaktens side.")}
             </p>
           )}
           {!own && (
             <>
               <div className="form-section">
-                <span className="eyebrow">KONTEKST & RELATION</span>
+                <span className="eyebrow">{tr("KONTEKST & RELATION")}</span>
                 <div className="form-grid">
                   <label>
-                    Hvor mødtes I?
+                    {tr("Hvor mødtes I?")}
                     <input
                       value={c.event}
                       onChange={(e) => set("event", e.target.value)}
                       list="events"
-                      placeholder="Konference, middag, møde…"
+                      placeholder={tr("Konference, middag, møde…")}
                     />
                     <datalist id="events">
                       {[
@@ -2181,7 +2294,7 @@ function EditCard({
                     </datalist>
                   </label>
                   <label>
-                    Dato for mødet
+                    {tr("Dato for mødet")}
                     <input
                       type="date"
                       value={c.met_at}
@@ -2189,11 +2302,11 @@ function EditCard({
                     />
                   </label>
                   <label>
-                    Tags (adskilt med komma)
+                    {tr("Tags (adskilt med komma)")}
                     <input
                       value={tagText}
                       onChange={(e) => setTagText(e.target.value)}
-                      placeholder="Luftfart, turisme, partner"
+                      placeholder={tr("Luftfart, turisme, partner")}
                     />
                   </label>
                   <label>
@@ -2203,12 +2316,14 @@ function EditCard({
                       onChange={(e) => set("status", e.target.value)}
                     >
                       {statusNames.map((s) => (
-                        <option key={s}>{s}</option>
+                        <option key={s} value={s}>
+                          {tr(s)}
+                        </option>
                       ))}
                     </select>
                   </label>
                   <label>
-                    Følg op den
+                    {tr("Følg op den")}
                     <input
                       type="date"
                       value={c.follow_up}
@@ -2216,34 +2331,39 @@ function EditCard({
                     />
                   </label>
                   <label>
-                    Næste handling
+                    {tr("Næste handling")}
                     <input
                       value={c.next_action}
                       onChange={(e) => set("next_action", e.target.value)}
-                      placeholder="Send materiale, aftal kaffe…"
+                      placeholder={tr("Send materiale, aftal kaffe…")}
                     />
                   </label>
                 </div>
                 <label>
-                  Privat note
+                  {tr("Privat note")}
                   <textarea
                     rows={3}
                     value={c.notes}
                     onChange={(e) => set("notes", e.target.value)}
-                    placeholder="Hvad skal du huske om personen og samtalen?"
+                    placeholder={tr(
+                      "Hvad skal du huske om personen og samtalen?",
+                    )}
                   />
                 </label>
               </div>
               <div className="form-section">
-                <span className="eyebrow">FOTO AF VISITKORTET</span>
+                <span className="eyebrow">{tr("FOTO AF VISITKORTET")}</span>
                 <div className="photo-thumbs">
                   {c.photo_ids.map((id) => (
                     <div key={id}>
-                      <img src={"/api/files/" + id} alt="Foto af visitkort" />
+                      <img
+                        src={"/api/files/" + id}
+                        alt={tr("Foto af visitkort")}
+                      />
                       <button
                         type="button"
                         className="icon-btn"
-                        aria-label="Fjern visitkortfoto"
+                        aria-label={tr("Fjern visitkortfoto")}
                         onClick={() =>
                           set(
                             "photo_ids",
@@ -2258,7 +2378,8 @@ function EditCard({
                 </div>
                 {c.photo_ids.length < 4 && (
                   <label className="secondary file-label">
-                    <ImagePlus size={16} /> Tilføj side / foto
+                    <ImagePlus size={16} />
+                    {tr("Tilføj side / foto")}
                     <input
                       type="file"
                       accept="image/*"
@@ -2290,11 +2411,11 @@ function EditCard({
           <span>
             <Lock size={13} />
             {own
-              ? "Deling styres under Mit visitkort"
-              : "Gemmes i dit private bibliotek"}
+              ? tr("Deling styres under Mit visitkort")
+              : tr("Gemmes i dit private bibliotek")}
           </span>
           <button type="button" className="secondary" onClick={onClose}>
-            Annullér
+            {tr("Annullér")}
           </button>
           <button className="primary" disabled={busy || uploading}>
             {busy || uploading ? (
@@ -2302,7 +2423,7 @@ function EditCard({
             ) : (
               <Check size={17} />
             )}
-            Gem {own ? "mit kort" : "kontakt"}
+            {tr("Gem")} {own ? tr("mit kort") : tr("kontakt")}
           </button>
         </footer>
       </form>
@@ -2387,8 +2508,8 @@ function ScanModal({
   }
   return (
     <Modal
-      title="En ny forbindelse"
-      subtitle="Et foto er alt, der skal til."
+      title={tr("En ny forbindelse")}
+      subtitle={tr("Et foto er alt, der skal til.")}
       onClose={() => {
         if (!busy) onClose();
       }}
@@ -2402,20 +2523,22 @@ function ScanModal({
               setCamera(false);
             }}
           >
-            <Camera size={16} /> Visitkortfoto
+            <Camera size={16} />
+            {tr("Visitkortfoto")}
           </button>
           <button
             className={mode === "qr" ? "active" : ""}
             onClick={() => setMode("qr")}
           >
-            <QrCode size={16} /> QR-kode
+            <QrCode size={16} />
+            {tr("QR-kode")}
           </button>
         </div>
         {busy ? (
           <div className="scan-wait">
             <LoaderCircle className="spin" size={34} />
-            <h3>Aflæser dit visitkort…</h3>
-            <p>Du kan kontrollere og rette alle detaljer bagefter.</p>
+            <h3>{tr("Aflæser dit visitkort…")}</h3>
+            <p>{tr("Du kan kontrollere og rette alle detaljer bagefter.")}</p>
           </div>
         ) : mode === "foto" ? (
           <>
@@ -2423,12 +2546,13 @@ function ScanModal({
               <div className="capture-outline">
                 <ScanLine size={50} />
               </div>
-              <strong>Tag et billede af visitkortet</strong>
+              <strong>{tr("Tag et billede af visitkortet")}</strong>
               <span>
-                Godt lys og et skarpt billede giver det bedste resultat.
+                {tr("Godt lys og et skarpt billede giver det bedste resultat.")}
               </span>
               <span className="primary">
-                <Camera size={18} /> Åbn kamera
+                <Camera size={18} />
+                {tr("Åbn kamera")}
               </span>
               <input
                 type="file"
@@ -2441,7 +2565,8 @@ function ScanModal({
               />
             </label>
             <label className="secondary full file-label">
-              <Upload size={17} /> Vælg fra billeder
+              <Upload size={17} />
+              {tr("Vælg fra billeder")}
               <input
                 type="file"
                 accept="image/*"
@@ -2466,17 +2591,20 @@ function ScanModal({
               ) : (
                 <>
                   <QrCode size={70} />
-                  <p>Scan en QR-kode med kontaktdata eller et weblink.</p>
+                  <p>
+                    {tr("Scan en QR-kode med kontaktdata eller et weblink.")}
+                  </p>
                 </>
               )}
               <button className="primary" onClick={() => setCamera(!camera)}>
                 <Camera size={17} />
-                {camera ? "Stop kamera" : "Scan med kamera"}
+                {camera ? tr("Stop kamera") : tr("Scan med kamera")}
               </button>
               {cameraError && <p className="warning">{cameraError}</p>}
             </div>
             <label className="secondary full file-label">
-              <ImagePlus size={17} /> Importér QR fra billede
+              <ImagePlus size={17} />
+              {tr("Importér QR fra billede")}
               <input
                 type="file"
                 accept="image/*"
@@ -2487,7 +2615,7 @@ function ScanModal({
               />
             </label>
             <label>
-              Indsæt vCard, MeCard eller weblink
+              {tr("Indsæt vCard, MeCard eller weblink")}
               <textarea
                 rows={3}
                 value={raw}
@@ -2506,20 +2634,21 @@ function ScanModal({
                 }
               }}
             >
-              Importér detaljer
+              {tr("Importér detaljer")}
             </button>
           </>
         )}
         <label className="scan-event">
-          Mødested / konference
+          {tr("Mødested / konference")}
           <input
             value={event}
             onChange={(e) => onEvent(e.target.value)}
-            placeholder="Hvor møder du personen?"
+            placeholder={tr("Hvor møder du personen?")}
           />
         </label>
         <button className="text-btn full" disabled={busy} onClick={onManual}>
-          Opret kontakt manuelt <ArrowUpRight size={15} />
+          {tr("Opret kontakt manuelt")}
+          <ArrowUpRight size={15} />
         </button>
         {"contacts" in navigator && (
           <button
@@ -2556,12 +2685,14 @@ function ScanModal({
               }
             }}
           >
-            <ContactRound size={17} /> Importér fra telefonkontakter
+            <ContactRound size={17} />
+            {tr("Importér fra telefonkontakter")}
           </button>
         )}
         <p className="fineprint centered">
-          Fotos sendes til Cloudflare Workers AI for aflæsning. Kontaktdata
-          gemmes først, når du vælger Gem.
+          {tr(
+            "Fotos sendes til Cloudflare Workers AI for aflæsning. Kontaktdata gemmes først, når du vælger Gem.",
+          )}
         </p>
       </div>
     </Modal>
@@ -2591,7 +2722,7 @@ function ShareModal({
   return (
     <Modal
       title={"Del " + card.name}
-      subtitle="Vælg de oplysninger, kollegaen skal modtage."
+      subtitle={tr("Vælg de oplysninger, kollegaen skal modtage.")}
       onClose={onClose}
     >
       <div className="padded">
@@ -2599,13 +2730,15 @@ function ShareModal({
           <>
             <QR value={url} />
             <p className="centered">
-              Linket udløber om {days} {days === 1 ? "dag" : "dage"}.
+              {tr("Linket udløber om")} {days} {tr(days === 1 ? "dag" : "dage")}
+              .
             </p>
             <button
               className="primary full"
               onClick={() => shareLink(url, card.name, notify)}
             >
-              <Share2 size={17} /> Send / kopiér link
+              <Share2 size={17} />
+              {tr("Send / kopiér link")}
             </button>
             <a
               className="text-btn full"
@@ -2613,7 +2746,8 @@ function ShareModal({
               target="_blank"
               rel="noreferrer"
             >
-              Forhåndsvis delingen <ExternalLink size={15} />
+              {tr("Forhåndsvis delingen")}
+              <ExternalLink size={15} />
             </a>
           </>
         ) : (
@@ -2643,7 +2777,7 @@ function ShareModal({
                       }
                     />
                     <span>
-                      {labels[f]}
+                      {tr(labels[f])}
                       <small>{card[f]}</small>
                     </span>
                   </label>
@@ -2656,7 +2790,7 @@ function ShareModal({
                   checked={photo}
                   onChange={(e) => setPhoto(e.target.checked)}
                 />
-                Medtag profilbillede
+                {tr("Medtag profilbillede")}
               </label>
             )}
             {card.notes && (
@@ -2666,22 +2800,23 @@ function ShareModal({
                   checked={notes}
                   onChange={(e) => setNotes(e.target.checked)}
                 />
-                Medtag min private kontakt-note
+                {tr("Medtag min private kontakt-note")}
               </label>
             )}
             <p className="fineprint">
-              Interaktionshistorik, mødested, tags og opfølgningsopgaver deles
-              ikke. Kun kontakt-noten kan tilvælges.
+              {tr(
+                "Interaktionshistorik, mødested, tags og opfølgningsopgaver deles ikke. Kun kontakt-noten kan tilvælges.",
+              )}
             </p>
             <label>
-              Linkets levetid
+              {tr("Linkets levetid")}
               <select
                 value={days}
                 onChange={(e) => setDays(Number(e.target.value))}
               >
-                <option value={1}>1 dag</option>
-                <option value={7}>7 dage</option>
-                <option value={30}>30 dage</option>
+                <option value={1}>{tr("1 dag")}</option>
+                <option value={7}>{tr("7 dage")}</option>
+                <option value={30}>{tr("30 dage")}</option>
               </select>
             </label>
             <button
@@ -2715,7 +2850,7 @@ function ShareModal({
               ) : (
                 <LinkIcon size={17} />
               )}
-              Opret delingslink
+              {tr("Opret delingslink")}
             </button>
             <button
               className="secondary full"
@@ -2723,7 +2858,8 @@ function ShareModal({
                 download("kontakt.vcf", vcard(subset()), "text/vcard")
               }
             >
-              <Download size={17} /> Hent valgt kontaktdata som vCard
+              <Download size={17} />
+              {tr("Hent valgt kontaktdata som vCard")}
             </button>
           </>
         )}
@@ -2748,14 +2884,14 @@ function PublicCard({ token }: { token: string }) {
       </div>
       {err ? (
         <section className="public-card">
-          <Empty title="Dette kort er ikke tilgængeligt" text={err} />
+          <Empty title={tr("Dette kort er ikke tilgængeligt")} text={tr(err)} />
         </section>
       ) : c ? (
         <section className="public-card">
           <span className="eyebrow">
             {c.kind === "profile"
-              ? "LAD OS HOLDE KONTAKT"
-              : "EN FORBINDELSE DELT MED DIG"}
+              ? tr("LAD OS HOLDE KONTAKT")
+              : tr("EN FORBINDELSE DELT MED DIG")}
           </span>
           <Avatar
             card={c}
@@ -2768,7 +2904,8 @@ function PublicCard({ token }: { token: string }) {
           <p>{c.title}</p>
           {c.company && <strong className="public-company">{c.company}</strong>}
           <a className="primary full" href={"/api/public/" + token + "/vcard"}>
-            <ContactRound size={19} /> Gem i mine kontakter
+            <ContactRound size={19} />
+            {tr("Gem i mine kontakter")}
           </a>
           <div className="detail-links">
             {c.email && (
@@ -2801,19 +2938,22 @@ function PublicCard({ token }: { token: string }) {
           </div>
           {c.notes && (
             <div className="private-note">
-              <span>DELT NOTE</span>
+              <span>{tr("DELT NOTE")}</span>
               <p>{c.notes}</p>
             </div>
           )}
           <p className="fineprint">
-            Åbn den hentede kontaktfil på telefonen for at gemme personen i din
-            kontaktbog.
+            {tr(
+              "Åbn den hentede kontaktfil på telefonen for at gemme personen i din kontaktbog.",
+            )}
           </p>
         </section>
       ) : (
         <LoaderCircle className="spin" />
       )}
-      <p className="public-footer">Gode relationer starter med et møde.</p>
+      <p className="public-footer">
+        {tr("Gode relationer starter med et møde.")}
+      </p>
     </div>
   );
 }
@@ -2826,7 +2966,8 @@ function OfflineCapture({
 }) {
   return (
     <label className="secondary full file-label">
-      <Camera size={18} /> Gem visitkortfoto offline
+      <Camera size={18} />
+      {tr("Gem visitkortfoto offline")}
       <input
         type="file"
         accept="image/*"
@@ -2856,25 +2997,29 @@ function DraftList({
   return (
     <section className="panel">
       <div className="panel-heading">
-        <h2>Scanningskladder på denne enhed</h2>
+        <h2>{tr("Scanningskladder på denne enhed")}</h2>
         <span className="pill">{pending.length}</span>
       </div>
       {pending.map((d) => (
         <div className="sharing-row" key={d.id}>
           <div>
-            <strong>{d.event || "Visitkortfoto"}</strong>
-            <small>{date(d.date)} · Ikke gemt i databasen endnu</small>
+            <strong>{d.event || tr("Visitkortfoto")}</strong>
+            <small>
+              {date(d.date)}
+              {tr("· Ikke gemt i databasen endnu")}
+            </small>
           </div>
           <button
             className="secondary"
             disabled={busy || !navigator.onLine}
             onClick={() => onScan(d)}
           >
-            <ScanLine size={16} /> Aflæs
+            <ScanLine size={16} />
+            {tr("Aflæs")}
           </button>
           <button
             className="icon-btn"
-            aria-label="Slet kladde"
+            aria-label={tr("Slet kladde")}
             onClick={() => onDelete(d)}
           >
             <Trash2 size={16} />
@@ -2882,8 +3027,9 @@ function DraftList({
         </div>
       ))}
       <p className="fineprint padded">
-        Kladden bliver på denne enhed, også efter logout, indtil du aflæser
-        eller sletter den. Slet kladder før du giver enheden til andre.
+        {tr(
+          "Kladden bliver på denne enhed, også efter logout, indtil du aflæser eller sletter den. Slet kladder før du giver enheden til andre.",
+        )}
       </p>
     </section>
   );

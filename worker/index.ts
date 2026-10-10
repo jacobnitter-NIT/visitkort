@@ -544,7 +544,8 @@ async function api(req: Request, e: Env) {
     } catch (error) {
       // Log only the provider error, never the image, prompt or contact details.
       const reference = crypto.randomUUID();
-      const message = error instanceof Error ? error.message : "Unknown AI error";
+      const message =
+        error instanceof Error ? error.message : "Unknown AI error";
       console.error("visitkort.ai.scan_failed", {
         reference,
         model: "@cf/meta/llama-3.2-11b-vision-instruct",
@@ -742,7 +743,9 @@ export default {
     );
     headers.set(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+      new URL(req.url).pathname === "/crop-worker.js"
+        ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval';"
+        : "default-src 'self'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
     );
     return new Response(response.body, { status: response.status, headers });
   },
