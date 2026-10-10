@@ -1,0 +1,1 @@
+CREATE TABLE conferences (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, data TEXT NOT NULL, updated_at TEXT NOT NULL);

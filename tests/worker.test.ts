@@ -41,6 +41,11 @@ test("private library and constrained share links work through D1 and R2", async
     const migration = await readFile("migrations/0001_initial.sql", "utf8");
     for (const sql of migration.split(";").filter((s) => s.trim()))
       await db.prepare(sql).run();
+    const conferencesMigration = await readFile(
+      "migrations/0002_conferences.sql",
+      "utf8",
+    );
+    await db.prepare(conferencesMigration).run();
     let cookie = "";
     async function request(
       path: string,
@@ -64,6 +69,7 @@ test("private library and constrained share links work through D1 and R2", async
       async () => {
         for (const path of [
           "/contacts",
+          "/conferences",
           "/profile",
           "/shares",
           "/export",
@@ -113,9 +119,23 @@ test("private library and constrained share links work through D1 and R2", async
           "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aGxQAAAAASUVORK5CYII=",
           "base64",
         );
-        const boundary='visitkort-test-boundary';
-        const multipart=Buffer.concat([Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="test.png"\r\nContent-Type: image/png\r\n\r\n`),png,Buffer.from(`\r\n--${boundary}--\r\n`)]);
-        const response=await mf.dispatchFetch('http://localhost/api/upload',{method:'POST',headers:{Origin:'http://localhost',Cookie:cookie,'Content-Type':`multipart/form-data; boundary=${boundary}`},body:multipart});
+        const boundary = "visitkort-test-boundary";
+        const multipart = Buffer.concat([
+          Buffer.from(
+            `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="test.png"\r\nContent-Type: image/png\r\n\r\n`,
+          ),
+          png,
+          Buffer.from(`\r\n--${boundary}--\r\n`),
+        ]);
+        const response = await mf.dispatchFetch("http://localhost/api/upload", {
+          method: "POST",
+          headers: {
+            Origin: "http://localhost",
+            Cookie: cookie,
+            "Content-Type": `multipart/form-data; boundary=${boundary}`,
+          },
+          body: multipart,
+        });
         assert.equal(response.status, 201);
         const fileId = (await response.json()).id;
         assert.equal(
@@ -176,6 +196,51 @@ test("private library and constrained share links work through D1 and R2", async
             )
           ).status,
           404,
+        );
+      },
+    );
+    await t.test(
+      "conference follow-up persists, remains private and exports",
+      async () => {
+        assert.equal(
+          (
+            await request(
+              "/conferences",
+              "PUT",
+              { name: "Private Conference", notes: "Private notes" },
+              false,
+            )
+          ).status,
+          401,
+        );
+        const saved = await (
+          await request("/conferences", "PUT", {
+            name: "Private Conference",
+            notes: "Private notes",
+            follow_up: "2026-11-01",
+            next_action: "Prepare summary",
+          })
+        ).json();
+        assert.ok(saved.id);
+        const updated = await (
+          await request("/conferences", "PUT", {
+            name: "Private Conference",
+            notes: "Updated",
+            completed: true,
+          })
+        ).json();
+        assert.equal(updated.id, saved.id);
+        const rows = await (await request("/conferences")).json();
+        assert.equal(rows.length, 1);
+        assert.equal(rows[0].notes, "Updated");
+        assert.equal(rows[0].completed, true);
+        assert.equal(
+          (await (await request("/export")).json()).conferences[0].notes,
+          "Updated",
+        );
+        assert.equal(
+          (await request("/conferences", "PUT", { name: "" })).status,
+          400,
         );
       },
     );
